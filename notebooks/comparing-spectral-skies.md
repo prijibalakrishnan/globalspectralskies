@@ -86,7 +86,7 @@ singapore_morning %>%
   geom_line(aes(x = wv, y = spd, group = measurement, color = measurement))
 ```
 
-![](comparing_spectral_skies_files/figure-gfm/unnamed-chunk-6-1.png)<!-- -->
+![](comparing-spectral-skies_files/figure-gfm/unnamed-chunk-6-1.png)<!-- -->
 
 ## Comparison between Singapore and Berlin
 
@@ -108,7 +108,7 @@ mornings %>%
   geom_line(aes(x = wv, y = spd, group = measurement, color = measurement))
 ```
 
-![](comparing_spectral_skies_files/figure-gfm/unnamed-chunk-9-1.png)<!-- -->
+![](comparing-spectral-skies_files/figure-gfm/unnamed-chunk-9-1.png)<!-- -->
 
 ``` r
 mornings %>%
@@ -124,4 +124,4 @@ mornings %>%
            color = "black", angle = 90, size = 2.7, hjust = 1, vjust = -0.4)
 ```
 
-![](comparing_spectral_skies_files/figure-gfm/unnamed-chunk-10-1.png)<!-- -->
+![](comparing-spectral-skies_files/figure-gfm/unnamed-chunk-10-1.png)<!-- -->
