@@ -1,0 +1,113 @@
+---
+title: "Comparing spectral skies"
+author: "Priji Balakrishnan"
+date: "3/12/2020"
+output: github_document
+---
+
+We load the following libraries for our analysis.
+
+```{r message=FALSE}
+library(tidyverse)
+library(lubridate)
+library(here)
+```
+
+```{r include=FALSE}
+knitr::opts_chunk$set(dpi=300)
+
+newtheme <- theme_grey() +
+  theme(axis.line.x = element_line(size=0.8, colour = "black"),
+        axis.line.y = element_line(size=0.8, colour = "black"),
+        panel.grid.major = element_blank(),
+        panel.grid.minor = element_blank(),
+        # panel.border = element_rect(linetype = "solid", fill = NA, size = 1),
+        panel.border = element_blank(),
+        panel.background = element_blank(),
+        plot.title = element_text(size = 10, face = "bold"),
+        text = element_text(size=10),
+        legend.position = "bottom",
+        legend.title =element_blank(),
+        axis.title=element_text(size=10),
+        axis.text.x=element_text(colour="black", size = 9),
+        axis.text.y=element_text(colour="black", size = 9))
+theme_set(newtheme)
+```
+
+We load the data.
+
+```{r}
+singapore_skies <- readRDS(here::here("resources/processed_data/singapore.rds"))
+berlin_skies <- readRDS(here::here("resources/processed_data/berlin.rds"))
+
+spectral_skies <- singapore_skies %>%
+  bind_rows(berlin_skies) %>%
+  arrange(loc, hour(datetime), SkyType, wv) %>%
+  mutate(measurement = as_factor(str_c(loc, as.character(datetime), SkyType, sep="-")))
+```
+
+All experiments:
+
+```{r}
+levels(spectral_skies$measurement)
+```
+
+
+The following notebook expects data according to the following schema:
+
+- `wv`
+- `spd`
+- `SkyType`
+- `CCT`
+- `loc`
+- `datetime`: date format
+
+## Comparison between different Singapore morning skies
+
+We subset the data to get measurements in Singapore during the morning.
+
+```{r}
+singapore_morning <- spectral_skies %>%
+  filter(loc == "SIN", hour(datetime) <= 11)
+```
+
+```{r}
+singapore_morning %>%
+  ggplot() +
+  geom_line(aes(x = wv, y = spd, group = measurement, color = measurement))
+```
+
+## Comparison between Singapore and Berlin
+
+```{r}
+mornings <- spectral_skies %>%
+  filter(SkyType == "CS" | str_starts(SkyType, "MS"), hour(datetime) >= 7, hour(datetime) <= 10,
+         loc == "BER" | (loc == "SIN" & month(datetime) == 2))
+```
+
+```{r}
+mornings <- spectral_skies %>%
+  filter(hour(datetime) >= 7, hour(datetime) <= 10,
+         loc == "BER" | (loc == "SIN" & month(datetime) == 2))
+```
+
+```{r}
+mornings %>%
+  ggplot() +
+  geom_line(aes(x = wv, y = spd, group = measurement, color = measurement))
+```
+
+```{r}
+mornings %>%
+  filter(wv == 560) %>%
+  select(wv, measurement, spd) %>%
+  inner_join(mornings, by = c("measurement")) %>%
+  mutate(normalised_spd = spd.y / spd.x) %>%
+  select(-wv.x, -spd.x, wv = wv.y, spd = spd.y) %>%
+  ggplot() +
+  geom_line(aes(x = wv, y = normalised_spd, group = measurement, color = measurement)) +
+  geom_vline(xintercept = 725, linetype = 3, size = 0.2)+
+  annotate(geom = "text", x = 725, y = 1.2, label = "Water vapour  725nm", 
+           color = "black", angle = 90, size = 2.7, hjust = 1, vjust = -0.4)
+```
+

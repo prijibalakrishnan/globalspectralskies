@@ -1,0 +1,101 @@
+---
+title: "Processing Berlin data"
+author: "Priji Balakrishnan"
+date: "3/12/2020"
+output: github_document
+---
+
+
+
+Load libraries
+
+```{r message=FALSE}
+library(tidyverse)
+library(lubridate)
+library(here)
+```
+
+```{r include=FALSE}
+knitr::opts_chunk$set(dpi=300)
+
+newtheme <- theme_grey() +
+  theme(axis.line.x = element_line(size=0.8, colour = "black"),
+        axis.line.y = element_line(size=0.8, colour = "black"),
+        panel.grid.major = element_blank(),
+        panel.grid.minor = element_blank(),
+        # panel.border = element_rect(linetype = "solid", fill = NA, size = 1),
+        panel.border = element_blank(),
+        panel.background = element_blank(),
+        plot.title = element_text(size = 10, face = "bold"),
+        text = element_text(size=10),
+        legend.position = "bottom",
+        legend.title =element_blank(),
+        axis.title=element_text(size=10),
+        axis.text.x=element_text(colour="black", size = 9),
+        axis.text.y=element_text(colour="black", size = 9))
+theme_set(newtheme)
+```
+
+### Load data
+
+```{r message=FALSE}
+a <- read_csv(here::here("resources/berlin/25feb19-0907-CS-5826K.csv")) %>%
+  mutate(loc = "BER",
+         datetime = ymd_hms("2019-02-25 09:07:00"),
+         SkyType = "CS",
+         CCT = 5826)
+b <- read_csv(here::here("resources/berlin/25feb19-1200-CS-5607K.csv")) %>%
+  mutate(loc = "BER",
+         datetime = ymd_hms("2019-02-25 12:00:00"),
+         SkyType = "CS",
+         CCT = 5607)
+c <- read_csv(here::here("resources/berlin/25feb19-1500-CS-5753K.csv")) %>%
+  mutate(loc = "BER",
+         datetime = ymd_hms("2019-02-25 15:00:00"),
+         SkyType = "CS",
+         CCT = 5753)
+
+berlin_skies <- a %>%
+  bind_rows(b) %>%
+  bind_rows(c)
+```
+
+Save the data as an RDS object.
+
+```{r}
+saveRDS(berlin_skies, here::here("resources/processed_data/berlin.rds"))
+```
+
+### Explore data
+
+```{r}
+berlin_skies %>% glimpse()
+```
+
+Description of the variables:
+
+- **wv**: Wavelength in nm (nanometers)
+- **spd**: Spectral irradiance measured in W/m<sup>2</sup>/nm
+- **loc**: Location code for Berlin
+- **datetime**: Date and time of measurement taken in YY-MM-DD HH:MM:SS
+- **SkyType**: Sky condition code--Clear Sky (CS)
+- **CCT**: Colour temperature of the measured sky in Kelvin (K)
+
+The measurements were taken at three different times of the day--morning (9am), noon (12pm), and evening (3pm).
+
+```{r}
+berlin_skies %>% 
+  select(datetime) %>%
+  distinct()
+```
+
+```{r}
+berlin_skies %>%
+  mutate(datetime = as.character(datetime)) %>%
+  ggplot() +
+  geom_line(aes(x = wv, y = spd, group = datetime, colour = datetime)) +
+  scale_color_brewer(palette = "Dark2") +
+  xlab("Wavelength (nm)") +
+  ylab("Spectral irradiance (W/m2/nm)")
+```
+
